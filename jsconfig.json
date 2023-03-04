@@ -1,0 +1,10 @@
+{
+  "include": ["."],
+  "compilerOptions": {
+    "checkJs": true,
+    "target": "ES2016",
+    "moduleResolution": "Node",
+    "types": ["node"],
+    "resolveJsonModule": true
+  }
+}
