@@ -4,12 +4,15 @@
  */
 module.exports = (adapter) => {
   /** @type {Row[]} */
-  const rows = Array.from({ length: adapter.getMaxRows() }, () =>
-    adapter.guessToRow("")
-  );
-
-  const getNextIndex = () =>
-    rows.findIndex((row) => row.getText().length === 0);
+  const rows = Array.from({ length: adapter.getMaxRows() }, () => ({
+    getText: () => "",
+    getCells: () =>
+      Array.from({ length: adapter.getWordsLength() }, () => {
+        /** @type {Cell} */
+        const cell = { status: "empty", getText: () => "" };
+        return cell;
+      }),
+  }));
 
   const isGameWon = () =>
     rows.some((row) =>
@@ -18,12 +21,26 @@ module.exports = (adapter) => {
 
   const getFilledRows = () => rows.filter((row) => row.getText().length);
 
+  /**
+   * @param {Cell[]} cells
+   * @returns {Row}
+   */
+  const makeRow = (cells) => ({
+    getText: () => cells.map((cell) => cell.getText()).join(""),
+    getCells: () => cells,
+  });
+
+  const getNextIndex = () =>
+    rows.findIndex((row) => row.getText().length === 0);
+
+
   return {
     getRows: () => rows,
     canGuess: () => getFilledRows().length < adapter.getMaxRows(),
     getFilledRows,
-    placeGuess: (guess) => {
-      const row = adapter.guessToRow(guess);
+    placeGuess: async (guess) => {
+      const cells = await adapter.convertGuessToCells(guess);
+      const row = makeRow(cells);
       rows[getNextIndex()] = row;
       return isGameWon();
     },

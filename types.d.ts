@@ -27,20 +27,20 @@ interface LogAdapter {
 }
 
 interface GameAdapter {
+  getWordsLength(): number;
   getMaxRows(): number;
-  guessToRow(guess: string): Row;
-  guessToCells(guess: string): Cell[];
+  convertGuessToCells(guess: string): Promise<Cell[]>;
 }
 
 interface Board {
   getRows(): Row[];
   canGuess(): boolean;
   getFilledRows(): Row[];
-  placeGuess(guess: string): boolean;
+  placeGuess(guess: string): Promise<boolean>;
 }
 
 interface Player {
-  playGame(board: Board): boolean;
+  playGame(board: Board): Promise<boolean>;
 }
 
 interface Solver {

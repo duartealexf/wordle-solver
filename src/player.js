@@ -4,7 +4,7 @@
  * @returns {Player}
  */
 module.exports = (solver, logAdapter) => ({
-  playGame: (board) => {
+  playGame: async (board) => {
     let won = false;
 
     while (!won && board.canGuess()) {
@@ -14,7 +14,7 @@ module.exports = (solver, logAdapter) => ({
         logAdapter.log('No more guesses!')
         return false
       };
-      won = board.placeGuess(guess);
+      won = await board.placeGuess(guess);
       logAdapter.log(`Guessing ${guess}`);
     }
 
