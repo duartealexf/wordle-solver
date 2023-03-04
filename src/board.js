@@ -38,7 +38,8 @@ module.exports = (adapter) => {
     getRows: () => rows,
     canGuess: () => getFilledRows().length < adapter.getMaxRows(),
     getFilledRows,
-    placeGuess: async (guess) => {
+    placeGuess: async (_guess) => {
+      const guess = _guess.toLowerCase();
       const cells = await adapter.convertGuessToCells(guess);
       const row = makeRow(cells);
       rows[getNextIndex()] = row;

@@ -1,9 +1,4 @@
 /**
- * Solves Wordle in https://wordlegame.org/
- * Save it as a local snippet in Chrome and run it to enter a guess.
- */
-
-/**
  * @returns {GameAdapter}
  */
 module.exports = () => {
@@ -42,14 +37,33 @@ module.exports = () => {
    * @param {HTMLElement} element
    * @returns {string}
    */
-  const getElementText = (element) => element.innerText.replace(/\W/g, "");
+  const getElementText = (element) =>
+    element.innerText.replace(/\W/g, "").toLowerCase();
 
   /**
    * @param {number} ms
    */
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const getFilledRows = () => $rows.filter((r) => getElementText(r).length);
+  /**
+   * @param {HTMLElement[]} $cells
+   * @param {number} [attemps]
+   */
+  const waitForCellsAnimationsFinished = async ($cells, attemps = 10) => {
+    if (attemps === 0) throw new Error("Cells animations never finished");
+    if (
+      $cells.every(
+        ($cell) =>
+          $cell.matches(CELL_CORRECT_SELECTOR) ||
+          $cell.matches(CELL_PRESENT_SELECTOR) ||
+          $cell.matches(CELL_ABSENT_SELECTOR)
+      )
+    ) {
+      return;
+    }
+    await sleep(200);
+    return waitForCellsAnimationsFinished($cells, attemps - 1);
+  };
 
   /**
    * @param {string} guess
@@ -57,12 +71,15 @@ module.exports = () => {
    */
   const waitForLastGuessReady = async (guess, attemps = 10) => {
     if (attemps === 0) throw new Error(`Last guess not found: ${guess}`);
-    await sleep(200); // TODO: increase
-    const $latestRow = $rows.slice(getFilledRows().length)[0];
-    const text = getElementText($latestRow);
-    if (text !== guess) {
-      return waitForLastGuessReady(guess, attemps - 1);
+
+    for (const $row of $rows) {
+      const $cells = $$(CELL_SELECTOR, $row);
+      await waitForCellsAnimationsFinished($cells);
+      if (getElementText($row) === guess) return;
     }
+
+    await sleep(200);
+    return waitForLastGuessReady(guess, attemps - 1);
   };
 
   return {
@@ -80,7 +97,7 @@ module.exports = () => {
 
       /** @type {Cell[]} */
       const cells = $$(CELL_SELECTOR, $row).map(($cell) => {
-        const letter = getElementText($cell[0]);
+        const letter = getElementText($cell);
         /** @type {Status} */
         let status;
         if ($cell.matches(CELL_CORRECT_SELECTOR)) status = "correct";
