@@ -7,13 +7,37 @@ const allWords = require("./src/words");
 const { pickRandom } = require("./src/utils");
 
 /** @type {LogAdapter} */
-const logAdapter = { log: () => {} };
+const noLogAdapter = { log: () => {} };
 
-const solver = Solver(allWords, logAdapter);
-const player = Player(solver, logAdapter);
+/** @param {string} text */
+const green = (text) => `\x1b[37m\x1b[42m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
+/** @param {string} text */
+const orange = (text) => `\x1b[37m\x1b[43m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
+/** @param {string} text */
+const gray = (text) => `\x1b[37m\x1b[40m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
 
-const playGames = () => {
-  const gamesToPlay = 50;
+/** @param {Row[]} rows */
+const formatRowsOutput = (rows) =>
+  rows
+    .map((row) =>
+      row
+        .getCells()
+        .map(({ status, getText }) =>
+          status === "correct"
+            ? green(getText())
+            : status === "present"
+            ? orange(getText())
+            : gray(getText())
+        )
+        .join("")
+    )
+    .join("\n");
+
+const solver = Solver(allWords, noLogAdapter);
+const player = Player(solver, noLogAdapter);
+
+const playGames = async () => {
+  const gamesToPlay = parseInt(process.argv[2] ?? "10");
   let gamesPlayed = 0;
 
   const statistics = {
@@ -31,32 +55,41 @@ const playGames = () => {
     },
   };
 
+  let currentStreak = 0;
+
   while (gamesPlayed++ < gamesToPlay) {
-    let currentStreak = 0;
     const { element: answer } = pickRandom(allWords);
     const adapter = NodeGameAdapter(answer);
-    const game = Board(adapter);
-    const won = player.playGame(game);
+    const board = Board(adapter);
+    const won = await player.playGame(board);
 
-    logAdapter.log(won ? `Game won :)` : "Game lost :(");
+    console.log();
+    const header =
+      `Game ${gamesPlayed}/${gamesToPlay} (` +
+      (won ? `won` : `lost - answer: ${answer}`) +
+      ")";
+    console.log(header);
+    console.log(formatRowsOutput(board.getFilledRows()));
+    console.log(``);
 
     if (won) {
-      statistics.winningAttempts[game.getFilledRows().length]++;
+      statistics.winningAttempts[board.getFilledRows().length]++;
       statistics.gamesWon++;
       currentStreak++;
+      if (currentStreak > statistics.maxStreak) {
+        statistics.maxStreak = currentStreak;
+      }
     } else {
       currentStreak = 0;
       statistics.gamesLost++;
-    }
-
-    if (currentStreak > statistics.maxStreak) {
-      statistics.maxStreak = currentStreak;
     }
   }
 
   return statistics;
 };
 
-const statistics = playGames();
-
-console.log(JSON.stringify(statistics, null, 2));
+(async () => {
+  const statistics = await playGames();
+  console.log();
+  console.log(JSON.stringify(statistics, null, 2));
+})();
