@@ -4,12 +4,16 @@ Contains some scripts to solve wordle puzzles.
 
 See the files below for the code and instructions:
 
-- `lib/nytimes.js`: solves [Wordle puzzle in NY times](https://www.nytimes.com/games/wordle/index.html).
-- `lib/wordlegame.js`: solves [Wordle puzzle in Wordlegame.org](https://wordlegame.org/).
+- [lib/nytimes.js](lib/nytimes.js): solves the [NY Times Wordle puzzle](https://www.nytimes.com/games/wordle/index.html).
+- [lib/wordlegame.js](lib/wordlegame.js): solves the [Wordlegame.org Wordle puzzle](https://wordlegame.org/).
 
-> Average success rate: 92%.
+**Average success rate: 92%.**
 
 # NodeJS Wordle
+
+Requirements:
+
+- Node.js
 
 Create and solves the puzzles in NodeJS:
 
@@ -21,8 +25,4 @@ node play.js
 node play.js 2
 ```
 
-![Output of the NodeJS wordle solver](./cli-output.png "Output from CLI").
-
-# Requirements
-
-- Node.js
+![Output of the NodeJS wordle solver](./cli-output.png "Output from CLI")
