@@ -15,7 +15,7 @@ Requirements:
 
 - Node.js
 
-Create and solves the puzzles in NodeJS:
+You can also create and solve the puzzles in NodeJS:
 
 ```sh
 # Create and solve the default amount of puzzles:
