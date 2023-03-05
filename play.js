@@ -4,40 +4,16 @@ const Player = require("./src/player");
 const NodeGameAdapter = require("./src/adapters/node");
 
 const allWords = require("./src/words");
+const { formatRows } = require('./src/format');
 const { pickRandom } = require("./src/utils");
 
-/** @type {LogAdapter} */
-const noLogAdapter = { log: () => {} };
+/**
+ * @param {number} gamesToPlay 
+ */
+const play = async (gamesToPlay) => {
+  const solver = Solver(allWords, { log: () => {} });
+  const player = Player(solver, { log: () => {} });
 
-/** @param {string} text */
-const green = (text) => `\x1b[37m\x1b[42m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
-/** @param {string} text */
-const orange = (text) => `\x1b[37m\x1b[43m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
-/** @param {string} text */
-const gray = (text) => `\x1b[37m\x1b[40m\x1b[1m ${text.toUpperCase()} \x1b[0m`;
-
-/** @param {Row[]} rows */
-const formatRowsOutput = (rows) =>
-  rows
-    .map((row) =>
-      row
-        .getCells()
-        .map(({ status, getText }) =>
-          status === "correct"
-            ? green(getText())
-            : status === "present"
-            ? orange(getText())
-            : gray(getText())
-        )
-        .join("")
-    )
-    .join("\n");
-
-const solver = Solver(allWords, noLogAdapter);
-const player = Player(solver, noLogAdapter);
-
-const playGames = async () => {
-  const gamesToPlay = parseInt(process.argv[2] ?? "10");
   let gamesPlayed = 0;
 
   const statistics = {
@@ -45,7 +21,7 @@ const playGames = async () => {
     gamesWon: 0,
     gamesLost: 0,
     maxStreak: 0,
-    winningAttempts: {
+    distribution: {
       1: 0,
       2: 0,
       3: 0,
@@ -69,11 +45,10 @@ const playGames = async () => {
       (won ? `won` : `lost - answer: ${answer}`) +
       ")";
     console.log(header);
-    console.log(formatRowsOutput(board.getFilledRows()));
-    console.log(``);
+    console.log(formatRows(board.getFilledRows()));
 
     if (won) {
-      statistics.winningAttempts[board.getFilledRows().length]++;
+      statistics.distribution[board.getFilledRows().length]++;
       statistics.gamesWon++;
       currentStreak++;
       if (currentStreak > statistics.maxStreak) {
@@ -89,7 +64,18 @@ const playGames = async () => {
 };
 
 (async () => {
-  const statistics = await playGames();
+  const statistics = await play(parseInt(process.argv[2] ?? "10"));
   console.log();
-  console.log(JSON.stringify(statistics, null, 2));
+  console.log('Statistics:')
+  console.log('Games played:', statistics.gamesPlayed);
+  console.log('Games won:', statistics.gamesWon);
+  console.log('Games lost:', statistics.gamesLost);
+  console.log('Max streak:', statistics.maxStreak);
+  console.log('Correct guess distribution:');
+  console.log('  1st attempt:', statistics.distribution[1]);
+  console.log('  2nd attempt:', statistics.distribution[2]);
+  console.log('  3rd attempt:', statistics.distribution[3]);
+  console.log('  4th attempt:', statistics.distribution[4]);
+  console.log('  5th attempt:', statistics.distribution[5]);
+  console.log('  6th attempt:', statistics.distribution[6]);
 })();
